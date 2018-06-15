@@ -1,7 +1,7 @@
 # Byte-compiled / optimized / DLL files
 # 这里需要手动配置一些, 不需要同步给服务器的文件夹或文件
 .idea
-logs/
+logs/log*
 
 __pycache__/
 *.py[cod]
