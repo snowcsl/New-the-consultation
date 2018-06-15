@@ -1,4 +1,6 @@
 import redis
+import logging
+
 
 # 配置信息
 class Config(object):
@@ -22,9 +24,11 @@ class Config(object):
 
 class ProductionConfig(Config):
     DEBUG = False
+    LOG_LEVEL = logging.WARN
     # 正式开发中, 还需要更改mysql/redis的数据库配置(测试/正式)
     # SQLALCHEMY_DATABASE_URI = 'mysql://root:mysql@177.13.1.1/information11'
 
 
 class DevelopmentConfig(Config):
     DEBUG = True
+    LOG_LEVEL = logging.DEBUG
