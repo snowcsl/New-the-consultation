@@ -42,4 +42,8 @@ def create_app(config_name):
     # Flask-session扩展对象. 将存储到浏览器cookie中的session信息, 同步到指定地方(Redis)
     Session(app)
 
+    # 3. 在app创建的地方注册蓝图对象
+    from info.modules.index import index_blue
+    app.register_blueprint(index_blue)
+
     return app
