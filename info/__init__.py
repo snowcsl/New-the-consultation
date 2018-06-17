@@ -8,7 +8,7 @@ from logging.handlers import RotatingFileHandler
 
 
 db = SQLAlchemy()
-redis_store = None
+redis_store = None  # type: redis.StrictRedis
 
 def setup_log(config_name):
     # 设置日志的记录等级
