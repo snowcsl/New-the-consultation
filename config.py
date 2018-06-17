@@ -13,7 +13,10 @@ class Config(object):
     REDIS_HOST = '127.0.0.1'
     REDIS_PORT = 6379
 
-    SECRET_KEY = "EjpNVSNQTyGi1VvWECj9TvC/+kq3oujee2kTfQUs8yCM6xX9Yjq52v54g+HVoknA"
+    # SECRET_KEY
+    # import os, base64
+    # base64.b64encode(os.urandom(32)
+    SECRET_KEY = 'ULj2Dsn90IRqfAOqepxhT1ZxCehsURZH'
 
     # flask-session的配置信息
     SESSION_TYPE = "redis"  # 指定 session 保存到 redis 中

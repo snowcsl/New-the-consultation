@@ -1,5 +1,6 @@
 import random
 import re
+import logging
 from flask import request, abort, current_app, make_response, json, jsonify
 
 from info.libs.yuntongxun.sms import CCP
@@ -75,6 +76,8 @@ def sms_code():
     # '%06d': 生成6位数字, 不足以0补齐
     sms_code_str = '%06d' % random.randint(0, 999999)
     current_app.logger.info(sms_code_str)
+    # logging.error(sms_code_str)
+    # 在最新的1.0.2的版本中. current_app.logger和logging没有区别
     
     # 6. 保存验证码到redis
     try:
