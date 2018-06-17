@@ -84,9 +84,10 @@ def sms_code():
         return jsonify(errno=RET.DBERR, errmsg="保存redis数据库错误")
 
     # 7. 发送短信
-    result = CCP().send_template_sms(mobile, [sms_code_str, 5], 1)
-    if result != '000000':
-        return jsonify(errno=RET.THIRDERR, errmsg="发送短信失败")
+    # 如果发短信没有问题, 为了方便起见, 可以注释该段代码, 保证任意手机号都能获取验证码
+    # result = CCP().send_template_sms(mobile, [sms_code_str, 5], 1)
+    # if result != '000000':
+    #     return jsonify(errno=RET.THIRDERR, errmsg="发送短信失败")
 
     # 四. 返回数据
     return jsonify(errno=RET.OK, errmsg="发送短信成功")
