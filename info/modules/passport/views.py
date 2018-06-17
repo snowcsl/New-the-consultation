@@ -1,5 +1,7 @@
-from flask import request, abort, current_app, make_response, json
+import re
+from flask import request, abort, current_app, make_response, json, jsonify
 from info.utils.captcha.captcha import captcha
+from info.utils.response_code import RET
 from . import passport_blue
 from info import redis_store
 from info import constants
@@ -37,6 +39,18 @@ def sms_code():
 
     # 二. 校验参数
     # 2. 校验参数
+    # 2.1 完整性
+    if not all([image_code_id, image_code, mobile]):
+        # 如果数据有任何一个缺失, 都会进入这里
+        # 返回错误时, 一般会返回字典. 至少包含错误码和错误信息
+        # '{"errno":  "100", "errmsg": "参数不全"}'
+        # 前后端通常以JSON数据进行数据沟通.
+        return jsonify(errno=RET.PARAMERR, errmsg='参数不全')
+
+    # 2.2 手机号
+    if not re.match(r'^1[3456789][0-9]{9}$', mobile):
+        return jsonify(errno=RET.PARAMERR, errmsg='手机号错误')
+
 
     # 三. 逻辑处理
     """
