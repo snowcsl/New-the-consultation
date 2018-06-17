@@ -1,5 +1,8 @@
+import random
 import re
 from flask import request, abort, current_app, make_response, json, jsonify
+
+from info.libs.yuntongxun.sms import CCP
 from info.utils.captcha.captcha import captcha
 from info.utils.response_code import RET
 from . import passport_blue
@@ -51,18 +54,42 @@ def sms_code():
     if not re.match(r'^1[3456789][0-9]{9}$', mobile):
         return jsonify(errno=RET.PARAMERR, errmsg='手机号错误')
 
-
     # 三. 逻辑处理
-    """
-    3. 从redis获取图像验证码
-    4. 对比验证码
-    5. 生成短信验证码
-    6. 保存验证码到redis
-    7. 发送短信
-    """
+    # 3. 从redis获取图像验证码
+    try:
+        real_image_code = redis_store.get('image_code_id_' + image_code_id)
+    except Exception as e:
+        current_app.logger.error(e)
+        return jsonify(errno=RET.DBERR, errmsg='访问redis数据库错误')
+
+    if not real_image_code:
+        return jsonify(errno=RET.NODATA, errmsg='验证码已过期')
+
+    # 4. 对比验证码
+    # ABCD : abcd
+    if real_image_code.lower() != image_code.lower():
+        return jsonify(errno=RET.DATAERR, errmsg="验证码填写错误")
+
+    # 5. 生成短信验证码
+    # '123456'
+    # '%06d': 生成6位数字, 不足以0补齐
+    sms_code_str = '%06d' % random.randint(0, 999999)
+    current_app.logger.info(sms_code_str)
+    
+    # 6. 保存验证码到redis
+    try:
+        redis_store.setex('sms_code_' + mobile, constants.SMS_CODE_REDIS_EXPIRES, sms_code_str)
+    except Exception as e:
+        current_app.logger.error(e)
+        return jsonify(errno=RET.DBERR, errmsg="保存redis数据库错误")
+
+    # 7. 发送短信
+    result = CCP().send_template_sms(mobile, [sms_code_str, 5], 1)
+    if result != '000000':
+        return jsonify(errno=RET.THIRDERR, errmsg="发送短信失败")
 
     # 四. 返回数据
-    return 'sms_coude'
+    return jsonify(errno=RET.OK, errmsg="发送短信成功")
 
 
 # URL:/image_code
