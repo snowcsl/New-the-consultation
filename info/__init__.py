@@ -6,9 +6,9 @@ from flask_session import Session
 from config import *
 from logging.handlers import RotatingFileHandler
 
+
 db = SQLAlchemy()
 redis_store = None
-
 
 def setup_log(config_name):
     # 设置日志的记录等级
