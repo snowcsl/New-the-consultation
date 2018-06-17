@@ -4,7 +4,7 @@ from info import redis_store
 from flask import render_template, current_app
 
 
-@index_blue.route('/index')
+@index_blue.route('/')
 def index():
     current_app.logger.error('error')
     return render_template('news/index.html')
