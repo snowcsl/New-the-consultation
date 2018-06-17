@@ -37,7 +37,7 @@ def create_app(config_name):
     db.init_app(app)
 
     global redis_store
-    redis_store = redis.StrictRedis(host=config_name.REDIS_HOST, port=config_name.REDIS_PORT)
+    redis_store = redis.StrictRedis(host=config_name.REDIS_HOST, port=config_name.REDIS_PORT, decode_responses=True)
 
     # Flask-session扩展对象. 将存储到浏览器cookie中的session信息, 同步到指定地方(Redis)
     Session(app)
