@@ -10,6 +10,7 @@ from info.utils.response_code import RET
 from . import passport_blue
 from info import redis_store, db
 from info import constants
+from werkzeug.security import generate_password_hash, check_password_hash
 
 
 # 开发中, 后端人员来定义路由地址\请求方式\参数\返回值等
@@ -40,7 +41,8 @@ def login():
         return jsonify(errno=RET.DBERR, errmsg="数据库错误")
 
     # 2. 验证密码或用户是否存在
-    if not user or user.password_hash != password:
+    # if not user or not check_password_hash(user.password_hash, password):
+    if not user or not user.check_password(password):
         return jsonify(errno=RET.DATAERR, errmsg="手机号或密码错误")
 
     # 3. 设置登录 --> 设置session
@@ -108,7 +110,12 @@ def register():
     user.nick_name = mobile  # 没有昵称, 先用手机号替代
     user.mobile = mobile
     # TODO (zhubo) 未做密码加密处理
-    user.password_hash = password
+    # pbkdf2:sha256:50000$HsSpOY1d$5bacb41165429cfb43ea61667d9c8aff6a6e40048e7efafb0140f99297238893
+    # user.password_hash = generate_password_hash(password)
+    # 开发中,对模型的处理一般都要放到模型中实现, 在视图函数中不要出现相关的运算代码
+    user.password = password
+
+    # MVC: model(模型: 除了定义,还包括对属性的计算) view(模板) control(控制, 将模型数据显示到视图中. 视图函数/接口)
 
     # 2.3 提交数据库
     try:

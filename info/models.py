@@ -58,6 +58,7 @@ class User(BaseModel, db.Model):
     # 当前用户所发布的新闻
     news_list = db.relationship('News', backref='user', lazy='dynamic')
 
+    # property: 将装饰的方法提升为类属性 --> 默认是getter方法
     @property
     def password(self):
         raise AttributeError("当前属性不可读")
@@ -66,7 +67,7 @@ class User(BaseModel, db.Model):
     def password(self, value):
         self.password_hash = generate_password_hash(value)
 
-    def check_passowrd(self, password):
+    def check_password(self, password):
         return check_password_hash(self.password_hash, password)
 
     def to_dict(self):
