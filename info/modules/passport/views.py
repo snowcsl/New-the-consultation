@@ -190,7 +190,8 @@ def sms_code():
         return jsonify(errno=RET.PARAMERR, errmsg='手机号错误')
 
     # 三. 逻辑处理
-    # 3. 从redis获取图像验证码
+    # 1. 对比验证码
+    # 1.1 从redis获取图像验证码
     try:
         real_image_code = redis_store.get('image_code_id_' + image_code_id)
     except Exception as e:
@@ -200,12 +201,34 @@ def sms_code():
     if not real_image_code:
         return jsonify(errno=RET.NODATA, errmsg='验证码已过期')
 
-    # 4. 对比验证码
+
+    # 1.2 删除验证码
+    # 图像验证码只有1次有效期, 无论是否验证通过
+    try:
+        redis_store.delete('image_code_id_' + image_code_id)
+    except Exception as e:
+        current_app.logger.error(e)
+        # 为了用户体验, 可以不用返回JSON错误信息
+        return jsonify(errno=RET.DBERR, errmsg="删除redis数据库")
+
+
+    # 1.3 对比验证码
     # ABCD : abcd
     if real_image_code.lower() != image_code.lower():
         return jsonify(errno=RET.DATAERR, errmsg="验证码填写错误")
 
-    # 5. 生成短信验证码
+    # 2. 发送短信
+    # 2.1 判断用户是否注册过
+    try:
+        user = User.query.filter_by(mobile=mobile).first()
+    except Exception as e:
+        current_app.logger.error(e)
+        return jsonify(errno=RET.DBERR, errmsg="查询mysql数据库错误")
+
+    if user:
+        return jsonify(errno=RET.DATAEXIST, errmsg="手机号已注册")
+
+    # 2.2 生成短信验证码
     # '123456'
     # '%06d': 生成6位数字, 不足以0补齐
     sms_code_str = '%06d' % random.randint(0, 999999)
@@ -213,14 +236,14 @@ def sms_code():
     # logging.error(sms_code_str)
     # 在最新的1.0.2的版本中. current_app.logger和logging没有区别
     
-    # 6. 保存验证码到redis
+    # 2.3 保存验证码到redis
     try:
         redis_store.setex('sms_code_' + mobile, constants.SMS_CODE_REDIS_EXPIRES, sms_code_str)
     except Exception as e:
         current_app.logger.error(e)
         return jsonify(errno=RET.DBERR, errmsg="保存redis数据库错误")
 
-    # 7. 发送短信
+    # 2.4 发送短信
     # 如果发短信没有问题, 为了方便起见, 可以注释该段代码, 保证任意手机号都能获取验证码
     # result = CCP().send_template_sms(mobile, [sms_code_str, 5], 1)
     # if result != '000000':
