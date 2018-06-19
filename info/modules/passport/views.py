@@ -4,10 +4,11 @@ import logging
 from flask import request, abort, current_app, make_response, json, jsonify
 
 from info.libs.yuntongxun.sms import CCP
+from info.models import User
 from info.utils.captcha.captcha import captcha
 from info.utils.response_code import RET
 from . import passport_blue
-from info import redis_store
+from info import redis_store, db
 from info import constants
 
 
@@ -54,6 +55,33 @@ def register():
     except Exception as e:
         current_app.logger.error(e)
         return jsonify(errno=RET.DBERR, errmsg="删除redis数据库错误")
+
+    # 2. 用户注册
+    # 2.1 判断是否注册
+    try:
+        user = User.query.filter_by(mobile=mobile).first()
+    except Exception as e:
+        current_app.logger.error(e)
+        return jsonify(errno=RET.DBERR, errmsg="查询mysql数据库错误")
+
+    if user:
+        return jsonify(errno=RET.DATAEXIST, errmsg="手机号已注册")
+
+    # 2.2 创建用户模型
+    user = User()
+    user.nick_name = mobile  # 没有昵称, 先用手机号替代
+    user.mobile = mobile
+    # TODO (zhubo) 未做密码加密处理
+    user.password_hash = password
+
+    # 2.3 提交数据库
+    try:
+        db.session.add(user)
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(e)
+        return jsonify(errno=RET.DBERR, errmsg="数据库错误")
 
     return 'register'
 
