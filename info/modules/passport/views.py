@@ -15,6 +15,42 @@ from info import constants
 # 开发中, 后端人员来定义路由地址\请求方式\参数\返回值等
 
 
+# 用户登录
+@passport_blue.route('/login', methods=['POST'])
+def login():
+    # 一. 获取参数
+    mobile = request.json.get('mobile')
+    password = request.json.get('password')
+
+    # 二. 校验参数
+    # 2.1 完整性
+    if not all([mobile, password]):
+        return jsonify(errno=RET.PARAMERR, errmsg="参数不全")
+
+    # 2.2 手机号
+    if not re.match(r'^1[3-9][0-9]{9}$', mobile):
+        return jsonify(errno=RET.PARAMERR, errmsg="手机号错误")
+
+    # 三. 逻辑处理
+    # 1. 查询用户
+    try:
+        user = User.query.filter_by(mobile=mobile).first()
+    except Exception as e:
+        current_app.logger.error(e)
+        return jsonify(errno=RET.DBERR, errmsg="数据库错误")
+
+    # 2. 验证密码或用户是否存在
+    if not user or user.password_hash != password:
+        return jsonify(errno=RET.DATAERR, errmsg="手机号或密码错误")
+
+    # 3. 设置登录 --> 设置session
+    session['user_id'] = user.id
+    session['nick_name'] = user.nick_name
+
+    # 四. 返回数据
+    return jsonify(errno=RET.OK, errmsg="登录成功")
+
+
 # 注册用户
 @passport_blue.route('/register', methods=['POST'])
 def register():
