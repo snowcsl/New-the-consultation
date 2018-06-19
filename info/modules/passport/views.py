@@ -14,6 +14,27 @@ from info import constants
 # 开发中, 后端人员来定义路由地址\请求方式\参数\返回值等
 
 
+# 注册用户
+@passport_blue.route('/register', methods=['POST'])
+def register():
+
+    # 一. 获取参数
+    mobile = request.json.get('mobile')
+    sms_code = request.json.get('sms_code')
+    password = request.json.get('password')
+
+    # 二. 校验参数
+    # 2.1 完整性
+    if not all([mobile, sms_code, password]):
+        return jsonify(errno=RET.PARAMERR, errmsg="参数不全")
+
+    # 2.2 手机号
+    if not re.match(r'^1[3456789][0-9]{9}$', mobile):
+        return jsonify(errno=RET.PARAMERR, errmsg="手机号填写错误")
+
+    return 'register'
+
+
 # URL:/sms_code
 # 请求方式: POST
 # 参数: image_code_id, mobile , image_code
