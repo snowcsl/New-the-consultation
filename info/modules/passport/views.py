@@ -31,6 +31,29 @@ def register():
     # 2.2 手机号
     if not re.match(r'^1[3456789][0-9]{9}$', mobile):
         return jsonify(errno=RET.PARAMERR, errmsg="手机号填写错误")
+    
+    # 三. 逻辑处理
+    # 1. 对比验证码
+    # 1.1 从redis获取数据
+    try:
+        real_sms_code = redis_store.get('sms_code_' + mobile)
+    except Exception as e:
+        current_app.logger.error(e)
+        return jsonify(errno=RET.DBERR, errmsg="数据库错误")
+    
+    if not real_sms_code:
+        return jsonify(errno=RET.NODATA, errmsg="短信验证码已过期或者手机号填写错误")
+
+    # 1.2 对比短信验证码
+    if real_sms_code != sms_code:
+        return jsonify(errno=RET.DATAERR, errmsg="验证码填写错误")
+
+    # 1.3 删除短信验证码
+    try:
+        redis_store.delete('sms_code_' + mobile)
+    except Exception as e:
+        current_app.logger.error(e)
+        return jsonify(errno=RET.DBERR, errmsg="删除redis数据库错误")
 
     return 'register'
 
