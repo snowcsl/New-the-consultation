@@ -16,6 +16,18 @@ from werkzeug.security import generate_password_hash, check_password_hash
 # 开发中, 后端人员来定义路由地址\请求方式\参数\返回值等
 
 
+@passport_blue.route("/logout", methods=['POST'])
+def logout():
+    """
+    清除session中的对应登录之后保存的信息
+    """
+    session.pop('user_id', None)
+    session.pop('nick_name', None)
+
+    # 返回结果
+    return jsonify(errno=RET.OK, errmsg="OK")
+
+
 # 用户登录
 @passport_blue.route('/login', methods=['POST'])
 def login():
