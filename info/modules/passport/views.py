@@ -1,7 +1,7 @@
 import random
 import re
 import logging
-from flask import request, abort, current_app, make_response, json, jsonify
+from flask import request, abort, current_app, make_response, json, jsonify, session
 
 from info.libs.yuntongxun.sms import CCP
 from info.models import User
@@ -83,7 +83,14 @@ def register():
         current_app.logger.error(e)
         return jsonify(errno=RET.DBERR, errmsg="数据库错误")
 
-    return 'register'
+    # 3. 设置登录
+    # 存储时: 1. 常用信息如昵称或手机号 2. 用户id(用户可能存在一定的变化)
+    # 场景: 用户先注册, 1小时候后发起修改用户名请求. 但是这中间该用户已被后台删除
+    session['user_id'] = user.id
+    session['nick_name'] = user.nick_name
+
+    # 四. 返回数据
+    return jsonify(errno=RET.OK, errmsg="注册成功")
 
 
 # URL:/sms_code
