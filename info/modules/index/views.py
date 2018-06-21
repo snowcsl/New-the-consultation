@@ -6,6 +6,25 @@ from info import redis_store, constants
 from flask import render_template, current_app, session, jsonify
 
 
+# 获取新闻列表接口
+# 请求方式: GET
+# 请求参数: cid, page, per_page
+# 传入参数：args
+@index_blue.route('/news_list')
+def get_news_list():
+    # 一. 获取参数 --> 不传设置默认
+
+    # 二. 校验参数 --> 类型校验(int)
+
+    # 三. 逻辑处理 --> News.query.filter(可有可无).order_by(创建时间降序).paginate(页码, 每页数据, False)
+
+    # 四. 返回数据 --> 返回data
+    data = {
+
+    }
+    return jsonify(errno=RET.OK, errmsg="成功", data=data)
+
+
 @index_blue.route('/')
 def index():
 
