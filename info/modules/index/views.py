@@ -3,7 +3,7 @@ from info.models import User, Category, News
 from info.utils.response_code import RET
 from . import index_blue
 from info import redis_store, constants
-from flask import render_template, current_app, session, jsonify
+from flask import render_template, current_app, session, jsonify, request
 
 
 # 获取新闻列表接口
@@ -13,14 +13,56 @@ from flask import render_template, current_app, session, jsonify
 @index_blue.route('/news_list')
 def get_news_list():
     # 一. 获取参数 --> 不传设置默认
+    cid = request.args.get('cid', 1)
+    page = request.args.get('page', 1)
+    per_page = request.args.get('per_page', constants.HOME_PAGE_MAX_NEWS)
 
     # 二. 校验参数 --> 类型校验(int)
+    try:
+        cid = int(cid)
+        page = int(page)
+        per_page = int(per_page)
+    except Exception as e:
+        current_app.logger.error(e)
+        return jsonify(errno=RET.PARAMERR, errmsg="参数错误")
 
     # 三. 逻辑处理 --> News.query.filter(可有可无).order_by(创建时间降序).paginate(页码, 每页数据, False)
 
+    # 以后遇到可选参数的查询语句. filter的条件是不确定的, 可以采取下面的技巧
+
+    # 3.1 定义空列表, 用于将来拼接查询条件
+    filters = []
+
+    # 3.2 判断分类id是否有值
+    if cid != 1:
+        filters.append(News.category_id == cid)
+
+    # 3.3 条件判断且拼接完毕, 会通过*进行展开
+    try:
+        paginates = News.query.filter(*filters).order_by(News.create_time.desc()).paginate(page, per_page, False)
+    except Exception as e:
+        current_app.logger.error(e)
+        return jsonify(errno=RET.DBERR, errmsg="数据库错误")
+
+    # 3.4 获取查询后的数据
+    news_models = paginates.items
+
+    # 获取分页的总页码
+    total_page = paginates.pages
+
+    # 获取当前页码
+    current_page = paginates.page
+
+    # 3.5 模型转字典
+    news_list = []
+    for news in news_models if news_models else []:
+        news_list.append(news.to_basic_dict())
+
     # 四. 返回数据 --> 返回data
     data = {
-
+        'news_list': news_list,
+        'total_page': total_page,
+        'current_page': current_page
     }
     return jsonify(errno=RET.OK, errmsg="成功", data=data)
 
