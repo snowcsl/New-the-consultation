@@ -5,6 +5,7 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_session import Session
 from config import *
 from logging.handlers import RotatingFileHandler
+from flask_wtf.csrf import CSRFProtect
 
 
 db = SQLAlchemy()
@@ -41,6 +42,12 @@ def create_app(config_name):
 
     # Flask-session扩展对象. 将存储到浏览器cookie中的session信息, 同步到指定地方(Redis)
     Session(app)
+
+    # 开启CSRF保护
+    # 从现在起, 程序会获取cookie中的随机值, 以及从表单或者ajax中获取随机值, 进行对比
+    # 如果对比失败, 则无法访问路由
+    # 后续需要设置随机值到cookie中, 以及增加ajax的hdeaers
+    CSRFProtect(app)
 
     # 3. 在app创建的地方注册蓝图对象
     from info.modules.index import index_blue
