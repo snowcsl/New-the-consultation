@@ -32,6 +32,8 @@ def index():
         return jsonify(errno=RET.DBERR, errmsg="数据库错误")
 
     category_list = []
+    # 如果category_models有值, 就使用category_models的值
+    # 如果category_models没有值, 就使用else后面的空数组给category_models赋值
     for category in category_models if category_models else []:
         category_list.append(category.to_dict())
 
