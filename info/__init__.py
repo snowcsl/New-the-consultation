@@ -50,6 +50,12 @@ def create_app(config_name):
     CSRFProtect(app)
 
     # 在这里增加请求钩子, 在请求之后设置cookie
+    # 我们无法判断用户第一次访问网站时, 是哪个页面. 不能写死给某个网页
+    # 需要对所有的请求都进行监听
+
+    # csrf token 会被缓存起来, 多次调用, 只会返回相同的token(没有被强制删除或者没有过期)
+    # 如果需要获取, 可以使用session['csrf_token']-->token会被扩展设置到session中
+    # 应该对所有的post\put\delete请求增加ajax的header或者表单的隐藏字段
     @app.after_request
     def after_request(response):
         token = generate_csrf()

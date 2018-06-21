@@ -178,6 +178,9 @@ $(function(){
             type: "post",
             data: JSON.stringify(params),
             contentType: "application/json",
+            headers: {
+                'X-CSRFToken': getCookie('csrf_token')
+            },
             success: function (resp) {
                 if (resp.errno == "0"){
                     // 刷新当前界面
@@ -197,6 +200,9 @@ function logout() {
         url: "/passport/logout",
         type: "post",
         contentType: "application/json",
+        headers: {
+            'X-CSRFToken': getCookie('csrf_token')
+        },
         success: function (resp) {
             // 刷新当前界面
             location.reload()
@@ -257,6 +263,9 @@ function sendSMSCode() {
         contentType: "application/json",
         // 响应数据的格式
         dataType: "json",
+        headers: {
+            'X-CSRFToken': getCookie('csrf_token')
+        },
         success: function (resp) {
             //这里的resp就是我们后端返回的JSON数据
             //jsonify(errno=RET.OK, errmsg="发送短信成功")
