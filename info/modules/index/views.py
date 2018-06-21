@@ -1,12 +1,15 @@
 # 2. 导入创建的蓝图对象, 使用蓝图实现路由
-from info.models import User
+from info.models import User, Category
+from info.utils.response_code import RET
 from . import index_blue
 from info import redis_store
-from flask import render_template, current_app, session
+from flask import render_template, current_app, session, jsonify
 
 
 @index_blue.route('/')
 def index():
+
+    # 一. 用户信息
     # 显示用户名和头像--> 核心逻辑--> 当重新加载首页时, 查询用户数据给模板
 
     # 1. 从session获取用户id
@@ -20,11 +23,24 @@ def index():
         except Exception as e:
             current_app.logger.error(e)
 
-    # 3. 封装成data字典, 传入模板
+    # 二. 分类信息
+    # 查询数据 --> 模型转字典 --> 返回给前端
+    try:
+        category_models = Category.query.all()
+    except Exception as e:
+        current_app.logger.error(e)
+        return jsonify(errno=RET.DBERR, errmsg="数据库错误")
+
+    category_list = []
+    for category in category_models if category_models else []:
+        category_list.append(category.to_dict())
+
+    # 封装成data字典, 传入模板
     data = {
         # 在处理不同接口的返回数据时, 不需要全部返回, 可以值返回需要的数据
         # user.to_index_dict(): 将模型对象转换为需要的数据字典
-        'user': user.to_index_dict() if user else None
+        'user': user.to_index_dict() if user else None,
+        'category_list': category_list
     }
 
     return render_template('news/index.html', data=data)
