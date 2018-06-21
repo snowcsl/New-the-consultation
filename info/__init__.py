@@ -62,6 +62,10 @@ def create_app(config_name):
         response.set_cookie('csrf_token', token)
         return response
 
+    # 增加自定义过滤器
+    from info.utils.common import do_index_class
+    app.add_template_filter(do_index_class, 'index_class')
+
     # 3. 在app创建的地方注册蓝图对象
     from info.modules.index import index_blue
     app.register_blueprint(index_blue)
