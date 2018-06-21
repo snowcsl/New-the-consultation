@@ -5,7 +5,7 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_session import Session
 from config import *
 from logging.handlers import RotatingFileHandler
-from flask_wtf.csrf import CSRFProtect
+from flask_wtf.csrf import CSRFProtect, generate_csrf
 
 
 db = SQLAlchemy()
@@ -48,6 +48,13 @@ def create_app(config_name):
     # 如果对比失败, 则无法访问路由
     # 后续需要设置随机值到cookie中, 以及增加ajax的hdeaers
     CSRFProtect(app)
+
+    # 在这里增加请求钩子, 在请求之后设置cookie
+    @app.after_request
+    def after_request(response):
+        token = generate_csrf()
+        response.set_cookie('csrf_token', token)
+        return response
 
     # 3. 在app创建的地方注册蓝图对象
     from info.modules.index import index_blue
