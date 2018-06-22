@@ -44,6 +44,7 @@ def news_comment():
 
     # 3.3 提交数据库
     try:
+        db.session.add(comment)
         db.session.commit()
     except Exception as e:
         db.session.rollback()
