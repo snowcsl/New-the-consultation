@@ -1,4 +1,5 @@
 # 工具类中的公用方法文件
+import functools
 from flask import session, current_app, g
 
 from info.models import User
@@ -16,7 +17,9 @@ def do_index_class(index):
 
 
 # 在不改变程序代码的情况下, 扩充功能
+# @functools.wraps: 让装饰器装饰的视图函数, 保持原始的名字
 def user_login_data(view_func):
+    @functools.wraps(view_func)
     def wrapper(*args, **kwargs):
         # 要增加的逻辑代码
 
