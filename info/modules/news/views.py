@@ -6,6 +6,20 @@ from info import redis_store, constants, db
 from flask import render_template, current_app, session, jsonify, request, g
 
 
+# 发布评论
+@news_blue.route('/news_comment', methods=['POST'])
+def news_comment():
+
+    # 一. 获取参数
+
+    # 二. 校验参数
+
+    # 三. 逻辑处理
+
+    # 四. 返回数据
+    return 'news_comment'
+
+
 # 收藏和取消收藏
 @news_blue.route('/news_collect', methods=['POST'])
 @user_login_data
