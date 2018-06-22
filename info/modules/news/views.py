@@ -7,4 +7,7 @@ from flask import render_template, current_app, session, jsonify, request
 
 @news_blue.route('/<news_id>')
 def get_news_detail(news_id):
-    return render_template('news/detail.html')
+    data = {
+
+    }
+    return render_template('news/detail.html', data=data)
