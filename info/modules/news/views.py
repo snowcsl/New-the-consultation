@@ -47,12 +47,20 @@ def get_news_detail(news_id):
         current_app.logger.error(e)
         return jsonify(errno=RET.DBERR, errmsg="数据库错误")
 
+    # 四. 查询用户收藏数据
+    is_collected = False
+    if user:
+        # 判断已登录的用户, 有收藏该新闻
+        if news in user.collection_news:
+            is_collected = True
+
     # 封装成data字典, 传入模板
     data = {
         # 在处理不同接口的返回数据时, 不需要全部返回, 可以值返回需要的数据
         # user.to_index_dict(): 将模型对象转换为需要的数据字典
         'user': user.to_index_dict() if user else None,
         'click_news_list': click_news_list,
-        'news': news.to_dict()
+        'news': news.to_dict(),
+        'is_collected': is_collected
     }
     return render_template('news/detail.html', data=data)
