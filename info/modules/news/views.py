@@ -1,25 +1,17 @@
 from info.models import User, Category, News
+from info.utils.common import user_login_data
 from info.utils.response_code import RET
 from . import news_blue
 from info import redis_store, constants
-from flask import render_template, current_app, session, jsonify, request
+from flask import render_template, current_app, session, jsonify, request, g
 
 
 @news_blue.route('/<news_id>')
+@user_login_data
 def get_news_detail(news_id):
     # 一. 用户信息
     # 显示用户名和头像--> 核心逻辑--> 当重新加载首页时, 查询用户数据给模板
-
-    # 1. 从session获取用户id
-    user_id = session.get('user_id', None)
-
-    # 2. 根据用户id查询数据
-    user = None
-    if user_id:
-        try:
-            user = User.query.get(user_id)
-        except Exception as e:
-            current_app.logger.error(e)
+    user = g.user
 
     # 二. 点击排行信息
     news_models = None

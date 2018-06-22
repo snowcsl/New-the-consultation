@@ -1,9 +1,10 @@
 # 2. 导入创建的蓝图对象, 使用蓝图实现路由
 from info.models import User, Category, News
+from info.utils.common import user_login_data
 from info.utils.response_code import RET
 from . import index_blue
 from info import redis_store, constants
-from flask import render_template, current_app, session, jsonify, request
+from flask import render_template, current_app, session, jsonify, request, g
 
 
 # 获取新闻列表接口
@@ -68,21 +69,12 @@ def get_news_list():
 
 
 @index_blue.route('/')
+@user_login_data
 def index():
 
     # 一. 用户信息
     # 显示用户名和头像--> 核心逻辑--> 当重新加载首页时, 查询用户数据给模板
-
-    # 1. 从session获取用户id
-    user_id = session.get('user_id', None)
-
-    # 2. 根据用户id查询数据
-    user = None
-    if user_id:
-        try:
-            user = User.query.get(user_id)
-        except Exception as e:
-            current_app.logger.error(e)
+    user = g.user
 
     # 二. 分类信息
     # 查询数据 --> 模型转字典 --> 返回给前端
