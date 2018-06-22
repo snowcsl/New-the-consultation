@@ -90,7 +90,6 @@ def index():
         category_models = Category.query.all()
     except Exception as e:
         current_app.logger.error(e)
-        return jsonify(errno=RET.DBERR, errmsg="数据库错误")
 
     category_list = []
     # 如果category_models有值, 就使用category_models的值
@@ -104,7 +103,6 @@ def index():
         news_models = News.query.order_by(News.clicks.desc()).limit(constants.CLICK_RANK_MAX_NEWS)
     except Exception as e:
         current_app.logger.error(e)
-        return jsonify(errno=RET.DBERR, errmsg="数据库错误")
 
     click_news_list = []
     for news in news_models if news_models else []:
