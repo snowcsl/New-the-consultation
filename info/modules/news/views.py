@@ -18,7 +18,7 @@ def news_comment():
 
     news_id = request.json.get('news_id')
     comment_str = request.json.get('comment')
-    parent_id = request.json.get('parent_id')
+    parent_id = request.json.get('parent_id')  # 只有子评论才有父评论ID
 
     # 二. 校验参数
     if not all([news_id, comment_str]):
@@ -41,6 +41,8 @@ def news_comment():
     comment.user_id = user.id
     comment.news_id = news.id
     comment.content = comment_str
+    if parent_id:
+        comment.parent_id = parent_id
 
     # 3.3 提交数据库
     try:
