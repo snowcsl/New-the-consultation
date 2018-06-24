@@ -119,6 +119,7 @@ def pic_info():
     # 三. 返回数据
     return jsonify(errno=RET.OK, errmsg="OK", data={"avatar_url": constants.QINIU_DOMIN_PREFIX + avatar_name})
 
+
 @user_blue.route('/base_info', methods=['GET', 'POST'])
 @user_login_data
 def base_info():
