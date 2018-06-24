@@ -111,7 +111,7 @@ def news_collect():
 
 
 # 获取新闻详情
-@news_blue.route('/<news_id>')
+@news_blue.route('/<int:news_id>')
 @user_login_data
 def get_news_detail(news_id):
     # 一. 用户信息
@@ -159,6 +159,18 @@ def get_news_detail(news_id):
         if news in user.collection_news:
             is_collected = True
 
+    # 五. 新闻评论
+    comment_models = []
+    try:
+        comment_models = Comment.query.filter(Comment.news_id == news_id).order_by(Comment.create_time.desc()).all()
+    except Exception as e:
+        current_app.logger.error(e)
+        return jsonify(errno=RET.DBERR, errmsg="数据库错误")
+
+    comment_list =[]
+    for comment in comment_models:
+        comment_list.append(comment.to_dict())
+
     # 封装成data字典, 传入模板
     data = {
         # 在处理不同接口的返回数据时, 不需要全部返回, 可以值返回需要的数据
@@ -166,6 +178,7 @@ def get_news_detail(news_id):
         'user': user.to_index_dict() if user else None,
         'click_news_list': click_news_list,
         'news': news.to_dict(),
-        'is_collected': is_collected
+        'is_collected': is_collected,
+        'comment_list': comment_list
     }
     return render_template('news/detail.html', data=data)
