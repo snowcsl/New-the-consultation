@@ -1,10 +1,46 @@
 from info.models import User, Category, News, Comment
 from info.utils.common import user_login_data
+from info.utils.image_storage import storage
 from info.utils.response_code import RET
 from . import user_blue
 from info import redis_store, constants, db
 from flask import render_template, current_app, session, jsonify, request, g, redirect
 
+
+@user_blue.route('/pic_info', methods=["GET", "POST"])
+@user_login_data
+def pic_info():
+    user = g.user
+    if request.method == 'GET':
+        return render_template('news/user_pic_info.html', data={"user": user.to_dict()})
+
+    # POST请求
+    # 一. 获取数据&参数校验
+    try:
+        avatar_data = request.files.get('avatar').read()
+    except Exception as e:
+        current_app.logger.error(e)
+        return jsonify(errno=RET.PARAMERR, errmsg="参数错误")
+
+    # 二. 上传到七牛云&存储到数据库
+    try:
+        avatar_name = storage(avatar_data)
+    except Exception as e:
+        current_app.logger.error(e)
+        return jsonify(errno=RET.THIRDERR, errmsg="上传七牛云错误")
+
+    # 存储时可以不存前缀
+    user.avatar_url = avatar_name
+    
+    try:
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(e)
+        return jsonify(errno=RET.DBERR, errmsg="数据库错误")
+
+    # 三. 返回数据
+    return jsonify(errno=RET.OK, errmsg="OK", data={"avatar_url": constants.QINIU_DOMIN_PREFIX + avatar_name})
 
 @user_blue.route('/base_info', methods=['GET', 'POST'])
 @user_login_data
