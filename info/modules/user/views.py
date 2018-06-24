@@ -7,6 +7,51 @@ from info import redis_store, constants, db
 from flask import render_template, current_app, session, jsonify, request, g, redirect
 
 
+@user_blue.route('/collection')
+@user_login_data
+def collection():
+    # 一. 获取参数
+    page = request.args.get('page', 1)
+
+    # 二. 校验参数
+    try:
+        page = int(page)
+    except Exception as e:
+        current_app.logger.error(e)
+        # 此时因为需要渲染网站, 不能返回JSON错误.
+        # 就需要对错误的参数进行赋默认值
+        page = 1
+
+    # 三. 逻辑处理
+    user = g.user
+    try:
+        # 进行分页数据查询
+        paginate = user.collection_news.paginate(page, constants.USER_COLLECTION_MAX_NEWS, False)
+        # 获取分页数据
+        collection_models = paginate.items
+        # 获取当前页
+        current_page = paginate.page
+        # 获取总页数
+        total_page = paginate.pages
+    except Exception as e:
+        current_app.logger.error(e)
+        collection_models = []
+        current_page = 1
+        total_page = 1
+
+    collection_list = []
+    for collection in collection_models:
+        collection_list.append(collection.to_dict())
+
+    # 四. 返回数据
+    data = {
+        "total_page": total_page,
+        "current_page": current_page,
+        "collection_list": collection_list
+    }
+    return render_template('news/user_collection.html', data=data)
+
+
 @user_blue.route('/pass_info', methods=["GET", "POST"])
 @user_login_data
 def pass_info():
