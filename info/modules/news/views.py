@@ -1,9 +1,9 @@
-from info.models import User, Category, News, Comment
+from info.models import News, Comment
 from info.utils.common import user_login_data
 from info.utils.response_code import RET
 from . import news_blue
-from info import redis_store, constants, db
-from flask import render_template, current_app, session, jsonify, request, g
+from info import constants, db
+from flask import render_template, current_app, jsonify, request, g
 
 
 # 发布评论
