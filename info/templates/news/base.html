@@ -41,9 +41,11 @@
         {% block contentBlock %}
         
         {% endblock %}
+
+        {% block rankBlock %}
         <div class="rank_con fr">
             {% block authorBlock %}
-            
+
             {% endblock %}
             <div class="rank_title">
                 <h3>点击排行</h3>
@@ -54,6 +56,7 @@
                 {% endfor %}
             </ul>
         </div>
+        {% endblock %}
     </div>
     <div class="footer">
         <div class="footer_links">
