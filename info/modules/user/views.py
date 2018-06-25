@@ -7,6 +7,51 @@ from info import redis_store, constants, db
 from flask import render_template, current_app, session, jsonify, request, g, redirect
 
 
+@user_blue.route('/news_list')
+@user_login_data
+def news_list():
+    
+    # 一. 获取参数
+    page = request.args.get('page', 1)
+    
+    # 二. 校验参数
+    try:
+        page = int(page)
+    except Exception as e:
+        current_app.logger.error(e)
+        page = 1
+    
+    # 三. 逻辑处理
+    user = g.user
+    news_models = []
+    current_page = 1
+    total_page = 1
+    try:
+        paginate = News.query.filter(News.user_id == user.id).paginate(page, 1, False)
+
+        # 获取分页数据
+        news_models = paginate.items
+        # 获取当前页
+        current_page = paginate.page
+        # 获取总页数
+        total_page = paginate.pages
+
+    except Exception as e:
+        current_app.logger.error(e)
+
+    news_list = []
+    for news in news_models:
+        news_list.append(news.to_dict())
+
+    # 四. 返回数据
+    data = {
+        'news_list': news_list,
+        'current_page': current_page,
+        'total_page': total_page
+    }
+    return render_template('news/user_news_list.html', data=data)
+
+
 @user_blue.route('/news_release', methods=['GET', 'POST'])
 @user_login_data
 def news_release():
