@@ -4,7 +4,14 @@ from info.utils.image_storage import storage
 from info.utils.response_code import RET
 from . import admin_blue
 from info import redis_store, constants, db
-from flask import render_template, current_app, session, jsonify, request, g, redirect
+from flask import render_template, current_app, session, jsonify, request, g, redirect, url_for
+
+
+@admin_blue.route('/index')
+@user_login_data
+def index():
+    user = g.user
+    return render_template('admin/index.html', user=user.to_dict() if user else  None)
 
 
 @admin_blue.route('/login', methods=["GET", "POST"])
@@ -36,5 +43,4 @@ def login():
     session["is_admin"] = user.is_admin
 
     # 跳转到后面管理首页
-    # return redirect(url_for('admin.index'))
-    return render_template('admin/login.html')
+    return redirect(url_for('admin.index'))
