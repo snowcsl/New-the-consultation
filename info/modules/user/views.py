@@ -41,7 +41,8 @@ def news_list():
 
     news_list = []
     for news in news_models:
-        news_list.append(news.to_dict())
+        # 需要返回带拒绝原因的
+        news_list.append(news.to_review_dict())
 
     # 四. 返回数据
     data = {
