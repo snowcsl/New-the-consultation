@@ -7,6 +7,33 @@ from info import redis_store, constants, db
 from flask import render_template, current_app, session, jsonify, request, g, redirect
 
 
+@user_blue.route('/news_release')
+@user_login_data
+def news_release():
+    # GET请求传递分类数据并渲染模板
+
+    # 查询分类
+    category_models = []
+    try:
+        category_models = Category.query.all()
+    except Exception as e:
+        current_app.logger.error(e)
+        return jsonify(errno=RET.DBERR, errmsg="数据库错误")
+
+    # 模型转字典
+    category_list = []
+    for category in category_models:
+        category_list.append(category.to_dict())
+
+    # 删除第一个元素
+    category_list.pop(0)
+
+    data = {
+        'category_list': category_list
+    }
+    return render_template('news/user_news_release.html', data=data)
+
+
 @user_blue.route('/collection')
 @user_login_data
 def collection():
