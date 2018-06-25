@@ -71,16 +71,38 @@ def news_release():
     if not category_model:
         return jsonify(errno=RET.NODATA, errmsg="无分类数据")
 
-
     # 三. 逻辑处理
     # 1. 上传图片
+    try:
+        image_name = storage(image_data)
+    except Exception as e:
+        current_app.logger.error(e)
+        return jsonify(errno=RET.DBERR, errmsg="数据库错误")
 
     # 2. 创建新闻模型
+    news = News()
+    news.title = title
+    news.digest = digest
+    news.source = source
+    news.content = content
+    # 新闻很多是爬来的. 网址前缀并非统一. 为了读取方便, 我们统一都加上前缀
+    news.index_image_url = constants.QINIU_DOMIN_PREFIX + image_name
+    news.category_id = category_id
+    news.user_id = g.user.id  # 发布新闻的人
+    # 1代表待审核状态
+    news.status = 1
 
-    # 3. 保存数据库
+    # 3. 保存到数据库
+    try:
+        db.session.add(news)
+        db.session.commit()
+    except Exception as e:
+        current_app.logger.error(e)
+        db.session.rollback()
+        return jsonify(errno=RET.DBERR, errmsg="保存数据失败")
 
-    # 四.  返回数据
-    pass
+    # 四. 返回数据
+    return jsonify(errno=RET.OK, errmsg="发布成功，等待审核")
 
 
 @user_blue.route('/collection')
