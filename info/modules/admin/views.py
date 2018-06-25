@@ -17,6 +17,15 @@ def index():
 @admin_blue.route('/login', methods=["GET", "POST"])
 def login():
     if request.method == "GET":
+
+        # 去 session 中取指定的值
+        user_id = session.get("user_id", None)
+        is_admin = session.get("is_admin", False)
+
+        # 如果用户id存在，并且是管理员，那么直接跳转管理后台主页
+        if user_id and is_admin:
+            return redirect(url_for('admin.index'))
+
         return render_template('admin/login.html')
 
     # 取到登录的参数
