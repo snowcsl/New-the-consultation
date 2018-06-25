@@ -7,31 +7,80 @@ from info import redis_store, constants, db
 from flask import render_template, current_app, session, jsonify, request, g, redirect
 
 
-@user_blue.route('/news_release')
+@user_blue.route('/news_release', methods=['GET', 'POST'])
 @user_login_data
 def news_release():
-    # GET请求传递分类数据并渲染模板
 
-    # 查询分类
-    category_models = []
+    # GET请求传递分类数据并渲染模板
+    if request.method == 'GET':
+        # 查询分类
+        category_models = []
+        try:
+            category_models = Category.query.all()
+        except Exception as e:
+            current_app.logger.error(e)
+            return jsonify(errno=RET.DBERR, errmsg="数据库错误")
+
+        # 模型转字典
+        category_list = []
+        for category in category_models:
+            category_list.append(category.to_dict())
+
+        # 删除第一个元素
+        category_list.pop(0)
+
+        data = {
+            'category_list': category_list
+        }
+        return render_template('news/user_news_release.html', data=data)
+
+    # POST请求
+    # 一. 获取参数
+    title = request.form.get("title")
+    source = "个人发布"
+    digest = request.form.get("digest")
+    content = request.form.get("content")
+    index_image = request.files.get("index_image")
+    category_id = request.form.get("category_id")
+
+    # 二. 校验参数
+    # 1. 完整性
+    if not all([title, source, digest, content, index_image, category_id]):
+        return jsonify(errno=RET.PARAMERR, errmsg="参数有误")
+
+    # 2. 读取图片
     try:
-        category_models = Category.query.all()
+        image_data = index_image.read()
+    except Exception as e:
+        current_app.logger.error(e)
+        return jsonify(errno=RET.PARAMERR, errmsg="参数有误")
+
+    # 3. 分类ID(类型, 查询是否已存在)
+    try:
+        category_id = int(category_id)
+    except Exception as e:
+        current_app.logger.error(e)
+        return jsonify(errno=RET.PARAMERR, errmsg="参数有误")
+
+    try:
+        category_model = Category.query.get(category_id)
     except Exception as e:
         current_app.logger.error(e)
         return jsonify(errno=RET.DBERR, errmsg="数据库错误")
 
-    # 模型转字典
-    category_list = []
-    for category in category_models:
-        category_list.append(category.to_dict())
+    if not category_model:
+        return jsonify(errno=RET.NODATA, errmsg="无分类数据")
 
-    # 删除第一个元素
-    category_list.pop(0)
 
-    data = {
-        'category_list': category_list
-    }
-    return render_template('news/user_news_release.html', data=data)
+    # 三. 逻辑处理
+    # 1. 上传图片
+
+    # 2. 创建新闻模型
+
+    # 3. 保存数据库
+
+    # 四.  返回数据
+    pass
 
 
 @user_blue.route('/collection')
