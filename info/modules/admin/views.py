@@ -1,3 +1,5 @@
+import time
+from datetime import datetime
 from info.models import User, Category, News, Comment
 from info.utils.common import user_login_data
 from info.utils.image_storage import storage
@@ -21,6 +23,27 @@ def user_count():
     except Exception as e:
         current_app.logger.error(e)
         return jsonify(errno=RET.DBERR, errmsg="数据库错误")
+
+    # 2. 当月新增 --> 获取同年同月1号的时间 从这个时间开始查询数据即可
+
+    """
+    2018-06-01 00:00:00
+    2018-06-27 15:14:11
+    
+    1. 如何获取 ()年 ()月
+    2. 如何将字符串按照一定的格式转换为日期对象
+    """
+
+    #  1. 获取 ()年 ()月
+    # now = datetime.now()
+    now = time.localtime()
+    mon_begin = '%d-%02d-01' % (now.tm_year, now.tm_mon)
+
+    # 2. 将字符串, 转换日期
+    # strptime: 专门用户将字符串转日期的
+    begin_date = datetime.strptime(mon_begin, '%Y-%m-%d')
+
+    # User.query.filter(User.create_time >= 当月开始时间).count()
 
     data = {
         'total_count': total_count
