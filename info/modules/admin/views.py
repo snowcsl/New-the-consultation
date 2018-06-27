@@ -7,6 +7,27 @@ from info import redis_store, constants, db
 from flask import render_template, current_app, session, jsonify, request, g, redirect, url_for
 
 
+@admin_blue.route('/user_count')
+@user_login_data
+def user_count():
+
+    # 一. 上方统计数据
+
+    # 1. 用户总数
+    total_count = 0
+
+    try:
+        total_count = User.query.filter(User.is_admin == False).count()
+    except Exception as e:
+        current_app.logger.error(e)
+        return jsonify(errno=RET.DBERR, errmsg="数据库错误")
+
+    data = {
+        'total_count': total_count
+    }
+    return render_template('admin/user_count.html', data=data)
+
+
 @admin_blue.route('/index')
 @user_login_data
 def index():
