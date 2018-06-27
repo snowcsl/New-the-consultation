@@ -32,7 +32,7 @@ def get_news_list():
     # 以后遇到可选参数的查询语句. filter的条件是不确定的, 可以采取下面的技巧
 
     # 3.1 定义空列表, 用于将来拼接查询条件
-    filters = []
+    filters = [News.status == 0]
 
     # 3.2 判断分类id是否有值
     if cid != 1:
