@@ -36,17 +36,35 @@ def user_count():
 
     #  1. 获取 ()年 ()月
     # now = datetime.now()
-    now = time.localtime()
-    mon_begin = '%d-%02d-01' % (now.tm_year, now.tm_mon)
+    # now = time.localtime()
+    # mon_begin = '%d-%02d-01' % (now.tm_year, now.tm_mon)
 
     # 2. 将字符串, 转换日期
     # strptime: 专门用户将字符串转日期的
-    begin_date = datetime.strptime(mon_begin, '%Y-%m-%d')
-
+    # begin_date = datetime.strptime(mon_begin, '%Y-%m-%d')
     # User.query.filter(User.create_time >= 当月开始时间).count()
+    mon_count = 0
+    try:
+        now = time.localtime()
+        mon_begin = '%d-%02d-01' % (now.tm_year, now.tm_mon)
+        mon_begin_date = datetime.strptime(mon_begin, '%Y-%m-%d')
+        mon_count = User.query.filter(User.is_admin == False, User.create_time >= mon_begin_date).count()
+    except Exception as e:
+        current_app.logger.error(e)
+
+    # 3. 查询日新增数
+    day_count = 0
+    try:
+        day_begin = '%d-%02d-%02d' % (now.tm_year, now.tm_mon, now.tm_mday)
+        day_begin_date = datetime.strptime(day_begin, '%Y-%m-%d')
+        day_count = User.query.filter(User.is_admin == False, User.create_time > day_begin_date).count()
+    except Exception as e:
+        current_app.logger.error(e)
 
     data = {
-        'total_count': total_count
+        'total_count': total_count,
+        'mon_count': mon_count,
+        'day_count': day_count
     }
     return render_template('admin/user_count.html', data=data)
 
