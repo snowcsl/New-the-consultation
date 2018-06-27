@@ -9,6 +9,49 @@ from info import redis_store, constants, db
 from flask import render_template, current_app, session, jsonify, request, g, redirect, url_for
 
 
+@admin_blue.route('/news_review')
+def news_review():
+    """返回待审核新闻列表"""
+
+    page = request.args.get("p", 1)
+    keywords = request.args.get("keywords", "")
+
+    try:
+        page = int(page)
+    except Exception as e:
+        current_app.logger.error(e)
+        page = 1
+
+    news_list = []
+    current_page = 1
+    total_page = 1
+
+    # 处理可选参数
+    filters = [News.status != 0]
+
+    if keywords:
+        filters.append(News.title.contains(keywords))
+
+    try:
+        paginate = News.query.filter(*filters) \
+            .order_by(News.create_time.desc()) \
+            .paginate(page, constants.ADMIN_NEWS_PAGE_MAX_COUNT, False)
+
+        news_list = paginate.items
+        current_page = paginate.page
+        total_page = paginate.pages
+    except Exception as e:
+        current_app.logger.error(e)
+
+    news_dict_list = []
+    for news in news_list:
+        news_dict_list.append(news.to_review_dict())
+
+    context = {"total_page": total_page, "current_page": current_page, "news_list": news_dict_list}
+
+    return render_template('admin/news_review.html', data=context)
+
+
 @admin_blue.route('/user_list')
 def user_list():
     """获取用户列表"""
