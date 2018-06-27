@@ -7,7 +7,9 @@ function getCookie(name) {
 $(function () {
 
     $(".release_form").submit(function (e) {
-        e.preventDefault()
+        e.preventDefault();
+
+        $('#rich_content').val(tinyMCE.get('rich_content').getContent());
 
         // 发布完毕之后需要选中我的发布新闻
         $(this).ajaxSubmit({
@@ -29,3 +31,4 @@ $(function () {
         })
     })
 })
+
