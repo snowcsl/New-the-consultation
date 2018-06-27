@@ -1,5 +1,5 @@
 import time
-from datetime import datetime
+from datetime import datetime, timedelta
 from info.models import User, Category, News, Comment
 from info.utils.common import user_login_data
 from info.utils.image_storage import storage
@@ -44,8 +44,8 @@ def user_count():
     # begin_date = datetime.strptime(mon_begin, '%Y-%m-%d')
     # User.query.filter(User.create_time >= 当月开始时间).count()
     mon_count = 0
+    now = time.localtime()
     try:
-        now = time.localtime()
         mon_begin = '%d-%02d-01' % (now.tm_year, now.tm_mon)
         mon_begin_date = datetime.strptime(mon_begin, '%Y-%m-%d')
         mon_count = User.query.filter(User.is_admin == False, User.create_time >= mon_begin_date).count()
@@ -55,16 +55,56 @@ def user_count():
     # 3. 查询日新增数
     day_count = 0
     try:
+        # 2018-6-27
         day_begin = '%d-%02d-%02d' % (now.tm_year, now.tm_mon, now.tm_mday)
         day_begin_date = datetime.strptime(day_begin, '%Y-%m-%d')
         day_count = User.query.filter(User.is_admin == False, User.create_time > day_begin_date).count()
     except Exception as e:
         current_app.logger.error(e)
 
+    # 二. 下方活跃度
+    """
+    统计最近一个月每一天的用户活跃度(最后登录)
+    # 2018-5-28 --> 2018-5-28 00:00:00 -- 2018-5-29 00:00:00
+    User.last_login >= day_begin_date, User.last_login < day_end_date
+    
+    1. 如何获取指定日期的下一天时间
+    2. 如何快速实现前一个的查询(for)
+    """
+    # 查询图表信息
+    # 获取到当天00:00:00时间
+    # strftime: 将日期按照一定的格式转换字符串的. 用法和strftime相反
+    now_date_str = datetime.now().strftime('%Y-%m-%d')
+    now_date = datetime.strptime(now_date_str, '%Y-%m-%d')
+
+    # 定义空数组，保存数据
+    active_date = []
+    active_count = []
+
+    # 依次添加数据，再反转
+    for i in range(0, 31):
+        begin_date = now_date - timedelta(days=i)
+        end_date = now_date - timedelta(days=(i - 1))
+        # 获取计算的当天日期 ['2018-06-27']
+        active_date.append(begin_date.strftime('%Y-%m-%d'))
+        count = 0
+        try:
+            count = User.query.filter(User.is_admin == False, User.last_login >= begin_date,
+                                      User.last_login < end_date).count()
+        except Exception as e:
+            current_app.logger.error(e)
+        # 获取当天的活跃数
+        active_count.append(count)
+
+    active_date.reverse()
+    active_count.reverse()
+
     data = {
         'total_count': total_count,
         'mon_count': mon_count,
-        'day_count': day_count
+        'day_count': day_count,
+        'active_date': active_date,
+        'active_count': active_count
     }
     return render_template('admin/user_count.html', data=data)
 
