@@ -1,6 +1,8 @@
 import random
 import re
 import logging
+from datetime import datetime
+
 from flask import request, abort, current_app, make_response, json, jsonify, session
 
 from info.libs.yuntongxun.sms import CCP
@@ -61,6 +63,16 @@ def login():
     # 3. 设置登录 --> 设置session
     session['user_id'] = user.id
     session['nick_name'] = user.nick_name
+
+    # 4. 更新最后登录时间
+    user.last_login = datetime.now()
+
+    try:
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(e)
+        return jsonify(errno=RET.DBERR, errmsg="数据库错误")
 
     # 四. 返回数据
     return jsonify(errno=RET.OK, errmsg="登录成功")

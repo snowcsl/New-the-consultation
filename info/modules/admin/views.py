@@ -9,6 +9,42 @@ from info import redis_store, constants, db
 from flask import render_template, current_app, session, jsonify, request, g, redirect, url_for
 
 
+@admin_blue.route('/user_list')
+def user_list():
+    """获取用户列表"""
+
+    # 获取参数
+    page = request.args.get("p", 1)
+    try:
+        page = int(page)
+    except Exception as e:
+        current_app.logger.error(e)
+        page = 1
+
+    # 设置变量默认值
+    users = []
+    current_page = 1
+    total_page = 1
+
+    # 查询数据
+    try:
+        paginate = User.query.filter(User.is_admin == False).order_by(User.last_login.desc()).paginate(page, constants.ADMIN_USER_PAGE_MAX_COUNT, False)
+        users = paginate.items
+        current_page = paginate.page
+        total_page = paginate.pages
+    except Exception as e:
+        current_app.logger.error(e)
+
+    # 将模型列表转成字典列表
+    users_list = []
+    for user in users:
+        users_list.append(user.to_admin_dict())
+
+    context = {"total_page": total_page, "current_page": current_page, "users": users_list}
+    return render_template('admin/user_list.html',
+                           data=context)
+
+
 @admin_blue.route('/user_count')
 @user_login_data
 def user_count():
