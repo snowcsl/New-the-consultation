@@ -9,6 +9,90 @@ from info import redis_store, constants, db
 from flask import render_template, current_app, session, jsonify, request, g, redirect, url_for
 
 
+@admin_blue.route('/news_edit_detail')
+def news_edit_detail():
+    """新闻编辑详情"""
+
+    # 获取参数
+    news_id = request.args.get("news_id")
+
+    if not news_id:
+        return render_template('admin/news_edit_detail.html', data={"errmsg": "未查询到此新闻"})
+
+    # 查询新闻
+    news = None
+    try:
+        news = News.query.get(news_id)
+    except Exception as e:
+        current_app.logger.error(e)
+
+    if not news:
+        return render_template('admin/news_edit_detail.html', data={"errmsg": "未查询到此新闻"})
+
+    # 查询分类的数据
+    categories = Category.query.all()
+    categories_li = []
+    for category in categories:
+
+        # 增加一个字段, 用来描述是否需要选中
+        c_dict = category.to_dict()
+        c_dict["is_selected"] = False
+        # 只有当新闻的分类ID和数据库的一样时, 才会设置为Ture
+        if category.id == news.category_id:
+            c_dict["is_selected"] = True
+
+        categories_li.append(c_dict)
+
+    # 移除`最新`分类
+    categories_li.pop(0)
+
+    data = {"news": news.to_dict(), "categories": categories_li}
+    return render_template('admin/news_edit_detail.html', data=data)
+
+
+@admin_blue.route('/news_edit')
+def news_edit():
+    """返回新闻列表"""
+
+    page = request.args.get("p", 1)
+    keywords = request.args.get("keywords", "")
+    try:
+        page = int(page)
+    except Exception as e:
+        current_app.logger.error(e)
+        page = 1
+
+    news_list = []
+    current_page = 1
+    total_page = 1
+
+    try:
+        filters = []
+        # 如果有关键词
+        if keywords:
+            # 添加关键词的检索选项
+            filters.append(News.title.contains(keywords))
+
+        # 查询
+        paginate = News.query.filter(*filters) \
+            .order_by(News.create_time.desc()) \
+            .paginate(page, constants.ADMIN_NEWS_PAGE_MAX_COUNT, False)
+
+        news_list = paginate.items
+        current_page = paginate.page
+        total_page = paginate.pages
+    except Exception as e:
+        current_app.logger.error(e)
+
+    news_dict_list = []
+    for news in news_list:
+        news_dict_list.append(news.to_basic_dict())
+
+    context = {"total_page": total_page, "current_page": current_page, "news_list": news_dict_list}
+
+    return render_template('admin/news_edit.html', data=context)
+
+
 @admin_blue.route('/news_review_detail', methods=['GET', 'POST'])
 def news_review_detail():
     """新闻审核"""
