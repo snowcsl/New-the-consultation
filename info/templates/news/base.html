@@ -1,4 +1,4 @@
-{#Block继承: 父模板中保留一样的代码, 不一样的使用block替代. 子模板重写block, 实现差异化的显示 #}
+{#Block的使用: 在父类中保留所有相同代码, 不同代码使用block留空. 子类继承,重写block实现差异化内容#}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -8,6 +8,9 @@
     {% endblock %}</title>
     <link rel="stylesheet" type="text/css" href="../../static/news/css/reset.css">
     <link rel="stylesheet" type="text/css" href="../../static/news/css/main.css">
+    {% block cssBlock %}
+
+    {% endblock %}
     <script type="text/javascript" src="../../static/news/js/jquery-1.12.4.min.js"></script>
     <script type="text/javascript" src="../../static/news/js/main.js"></script>
     {% block scriptBlock %}
@@ -21,18 +24,21 @@
             {% block categoryBlock %}
             
             {% endblock %}
+
             {% if data.user %}
                 <!-- 用户登录后显示下面，隐藏上面 -->
                 <div class="user_login fr">
-                    <img src="{% if data.user.avatar_url %}{{ data.user.avatar_url }}{% else %}../../static/news/images/person01.png{% endif %}" class="lgin_pic">
-                    <a href="{{ url_for('user.info') }}" class="login_nickname">{{ data.user.nick_name }}</a>
+                     <img src="{% if data.user.avatar_url %}{{ data.user.avatar_url }}{% else %}../../static/news/images/person01.png{% endif %}" class="lgin_pic">
+                    <a href="{{ url_for('user.info') }}">{{ data.user.nick_name }}</a>
                     <a href="javascript:;" onclick="logout()">退出</a>
                 </div>
             {% else %}
                 <div class="user_btns fr">
-                <a href="javascript:;" class="login_btn">登录</a> / <a href="javascript:;" class="register_btn">注册</a>
+                    <a href="javascript:;" class="login_btn">登录</a> / <a href="javascript:;" class="register_btn">注册</a>
                 </div>
             {% endif %}
+
+
 
         </div>
     </div>
@@ -41,7 +47,6 @@
         {% block contentBlock %}
         
         {% endblock %}
-
         {% block rankBlock %}
         <div class="rank_con fr">
             {% block authorBlock %}

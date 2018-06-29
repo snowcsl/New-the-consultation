@@ -4,7 +4,43 @@ from info.utils.image_storage import storage
 from info.utils.response_code import RET
 from . import user_blue
 from info import redis_store, constants, db
-from flask import render_template, current_app, session, jsonify, request, g, redirect
+from flask import render_template, current_app, session, jsonify, request, g, redirect, abort
+
+
+@user_blue.route('/other_info')
+@user_login_data
+def other_info():
+
+    user = g.user
+
+    # 去查询其他人的用户信息
+    other_id = request.args.get("user_id")
+
+    if not other_id:
+        abort(404)
+
+    # 查询指定id的用户信息
+    try:
+        other = User.query.get(other_id)
+    except Exception as e:
+        current_app.logger.error(e)
+
+    if not other:
+        abort(404)
+
+    is_followed = False
+    # if 当前新闻有作者，并且 当前登录用户已关注过这个用户
+    if other and user:
+        # if user 是否关注过 news.user
+        if other in user.followed:
+            is_followed = True
+
+    data = {
+        "is_followed": is_followed,
+        "user": g.user.to_dict() if g.user else None,
+        "other_info": other.to_dict()
+    }
+    return render_template('news/other.html', data=data)
 
 
 @user_blue.route('/user_follow')
