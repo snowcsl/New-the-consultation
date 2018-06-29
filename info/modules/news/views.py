@@ -1,9 +1,65 @@
-from info.models import News, Comment, User
+from info.models import News, Comment, User, CommentLike
 from info.utils.common import user_login_data
 from info.utils.response_code import RET
 from . import news_blue
 from info import constants, db
 from flask import render_template, current_app, jsonify, request, g, abort
+
+
+@news_blue.route('/comment_like', methods=["POST"])
+@user_login_data
+def set_comment_like():
+    """评论点赞"""
+
+    if not g.user:
+        return jsonify(errno=RET.SESSIONERR, errmsg="用户未登录")
+
+    # 获取参数
+    comment_id = request.json.get("comment_id")
+    action = request.json.get("action")
+
+    # 判断参数
+    if not all([comment_id, action]):
+        return jsonify(errno=RET.PARAMERR, errmsg="参数错误")
+
+    if action not in ("add", "remove"):
+        return jsonify(errno=RET.PARAMERR, errmsg="参数错误")
+
+    # 查询评论数据
+    try:
+        comment = Comment.query.get(comment_id)
+    except Exception as e:
+        current_app.logger.error(e)
+        return jsonify(errno=RET.DBERR, errmsg="查询数据失败")
+
+    if not comment:
+        return jsonify(errno=RET.NODATA, errmsg="评论数据不存在")
+
+    if action == "add":
+        # 判断没有点过赞, 才能增加
+        comment_like = CommentLike.query.filter_by(comment_id=comment_id, user_id=g.user.id).first()
+        if not comment_like:
+            comment_like = CommentLike()
+            comment_like.comment_id = comment_id
+            comment_like.user_id = g.user.id
+            db.session.add(comment_like)
+            # 增加点赞条数
+            comment.like_count += 1
+    else:
+        # 删除点赞数据
+        comment_like = CommentLike.query.filter_by(comment_id=comment_id, user_id=g.user.id).first()
+        if comment_like:
+            db.session.delete(comment_like)
+            # 减小点赞条数
+            comment.like_count -= 1
+
+    try:
+        db.session.commit()
+    except Exception as e:
+        current_app.logger.error(e)
+        db.session.rollback()
+        return jsonify(errno=RET.DBERR, errmsg="操作失败")
+    return jsonify(errno=RET.OK, errmsg="操作成功")
 
 
 @news_blue.route('/followed_user', methods=["POST"])
