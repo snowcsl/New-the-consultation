@@ -73,9 +73,9 @@ def create_app(config_name):
     def page_not_found(error):
         user = g.user
         data = {
-            'user': user.to_dict() if  user else None
+            'user': user.to_dict() if user else None
         }
-        return render_template('news/404.html', data= data), 404
+        return render_template('news/404.html', data=data), 404
 
     # 3. 在app创建的地方注册蓝图对象
     from info.modules.index import index_blue
