@@ -416,8 +416,9 @@ def user_count():
 
     # 依次添加数据，再反转
     for i in range(0, 31):
-        begin_date = now_date - timedelta(days=i)
-        end_date = now_date - timedelta(days=(i - 1))
+        begin_date = now_date - timedelta(days=(31-i))
+        end_date = begin_date + timedelta(days=1)
+        # end_date = now_date - timedelta(days=(i - 1))
         # 获取计算的当天日期 ['2018-06-27']
         active_date.append(begin_date.strftime('%Y-%m-%d'))
         count = 0
@@ -429,8 +430,8 @@ def user_count():
         # 获取当天的活跃数
         active_count.append(count)
 
-    active_date.reverse()
-    active_count.reverse()
+    # active_date.reverse()
+    # active_count.reverse()
 
     data = {
         'total_count': total_count,

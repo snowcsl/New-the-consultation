@@ -3,7 +3,7 @@ from info.utils.common import user_login_data
 from info.utils.response_code import RET
 from . import news_blue
 from info import constants, db
-from flask import render_template, current_app, jsonify, request, g
+from flask import render_template, current_app, jsonify, request, g, abort
 
 
 # 发布评论
@@ -136,10 +136,10 @@ def get_news_detail(news_id):
         news = News.query.get(news_id)
     except Exception as e:
         current_app.logger.error(e)
-        return jsonify(errno=RET.DBERR, errmsg="数据库错误")
+        abort(500)
 
     if not news:
-        return jsonify(errno=RET.NODATA, errmsg="无数据")
+        abort(404)
 
     # 3.2 增加点击量
     news.clicks += 1
@@ -150,7 +150,7 @@ def get_news_detail(news_id):
     except Exception as e:
         db.session.rollback()
         current_app.logger.error(e)
-        return jsonify(errno=RET.DBERR, errmsg="数据库错误")
+        abort(500)
 
     # 四. 查询用户收藏数据
     is_collected = False

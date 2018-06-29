@@ -1,6 +1,6 @@
 import redis
 import logging
-from flask import Flask
+from flask import Flask, render_template
 from flask_sqlalchemy import SQLAlchemy
 from flask_session import Session
 from config import *
@@ -65,6 +65,11 @@ def create_app(config_name):
     # 增加自定义过滤器
     from info.utils.common import do_index_class
     app.add_template_filter(do_index_class, 'index_class')
+
+    # 增加错误捕获
+    @app.errorhandler(404)
+    def page_not_found(error):
+        return render_template('news/404.html'), 404
 
     # 3. 在app创建的地方注册蓝图对象
     from info.modules.index import index_blue
