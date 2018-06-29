@@ -1,9 +1,58 @@
-from info.models import News, Comment
+from info.models import News, Comment, User
 from info.utils.common import user_login_data
 from info.utils.response_code import RET
 from . import news_blue
 from info import constants, db
 from flask import render_template, current_app, jsonify, request, g, abort
+
+
+@news_blue.route('/followed_user', methods=["POST"])
+@user_login_data
+def followed_user():
+    """关注/取消关注用户"""
+    if not g.user:
+        return jsonify(errno=RET.SESSIONERR, errmsg="用户未登录")
+
+    # 被关注的人的ID
+    user_id = request.json.get("user_id")
+    action = request.json.get("action")
+
+    if not all([user_id, action]):
+        return jsonify(errno=RET.PARAMERR, errmsg="参数错误")
+
+    if action not in ("follow", "unfollow"):
+        return jsonify(errno=RET.PARAMERR, errmsg="参数错误")
+
+    # 查询到关注的用户信息
+    try:
+        target_user = User.query.get(user_id)
+    except Exception as e:
+        current_app.logger.error(e)
+        return jsonify(errno=RET.DBERR, errmsg="查询数据库失败")
+
+    if not target_user:
+        return jsonify(errno=RET.NODATA, errmsg="未查询到用户数据")
+
+    # 根据不同操作做不同逻辑
+    if action == "follow":
+        # 要想关注某个用户, 要先确保对方的粉丝列表中没有我
+
+        # 目标用户的粉丝表中, 查询自己的id, 如果个数大于0, 说明已关注
+        if target_user.followers.filter(User.id == g.user.id).count() > 0:
+            return jsonify(errno=RET.DATAEXIST, errmsg="当前已关注")
+        target_user.followers.append(g.user)
+    else:
+        if target_user.followers.filter(User.id == g.user.id).count() > 0:
+            target_user.followers.remove(g.user)
+
+    # 保存到数据库
+    try:
+        db.session.commit()
+    except Exception as e:
+        current_app.logger.error(e)
+        return jsonify(errno=RET.DBERR, errmsg="数据保存错误")
+
+    return jsonify(errno=RET.OK, errmsg="操作成功")
 
 
 # 发布评论

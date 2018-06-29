@@ -7,6 +7,8 @@ from info import redis_store, constants, db
 from flask import render_template, current_app, session, jsonify, request, g, redirect
 
 
+
+
 @user_blue.route('/news_list')
 @user_login_data
 def news_list():
