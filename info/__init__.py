@@ -1,12 +1,11 @@
 import redis
 import logging
-from flask import Flask, render_template
+from flask import Flask, render_template, g
 from flask_sqlalchemy import SQLAlchemy
 from flask_session import Session
 from config import *
 from logging.handlers import RotatingFileHandler
 from flask_wtf.csrf import CSRFProtect, generate_csrf
-
 
 db = SQLAlchemy()
 redis_store = None  # type: redis.StrictRedis
@@ -67,9 +66,16 @@ def create_app(config_name):
     app.add_template_filter(do_index_class, 'index_class')
 
     # 增加错误捕获
+    from info.utils.common import user_login_data
+
     @app.errorhandler(404)
+    @user_login_data
     def page_not_found(error):
-        return render_template('news/404.html'), 404
+        user = g.user
+        data = {
+            'user': user.to_dict() if  user else None
+        }
+        return render_template('news/404.html', data= data), 404
 
     # 3. 在app创建的地方注册蓝图对象
     from info.modules.index import index_blue
