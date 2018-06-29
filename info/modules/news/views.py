@@ -272,6 +272,40 @@ def get_news_detail(news_id):
         current_app.logger.error(e)
         return jsonify(errno=RET.DBERR, errmsg="数据库错误")
 
+    # 评论点赞的ID列表
+    comment_like_ids = []
+
+    user = g.user
+    if user:
+        # 如果当前用户已登录
+        try:
+            # 1. 获取当前新闻所有评论的ID --> [17, 18, 19, 20]
+            comment_ids = [comment.id for comment in comment_models]
+
+            if len(comment_ids) > 0:
+                # 2. 取到当前用户在当前新闻的所有评论点赞的记录
+                # --> <18, 1> <19, 1>, <20, 1>
+                comment_likes = CommentLike.query.filter(CommentLike.comment_id.in_(comment_ids),
+                                                         CommentLike.user_id == g.user.id).all()
+                # 3. 取出记录中所有的评论id [18, 19, 20]
+                comment_like_ids = [comment_like.comment_id for comment_like in comment_likes]
+        except Exception as e:
+            current_app.logger.error(e)
+
+    comment_list = []
+    for item in comment_models:
+
+        comment_dict = item.to_dict()
+
+        # 给每一个评论模型, 默认增加一个标示符为False
+        comment_dict["is_like"] = False
+
+        # 判断用户是否点赞该评论
+        if user and item.id in comment_like_ids:
+            comment_dict["is_like"] = True
+
+        comment_list.append(comment_dict)
+
     # 六. 关注的处理
     is_followed = False
 
@@ -280,10 +314,6 @@ def get_news_detail(news_id):
         # 2. 查看我是否在新闻作者的粉丝表中
         if user in news.user.followers:
             is_followed = True
-
-    comment_list =[]
-    for comment in comment_models:
-        comment_list.append(comment.to_dict())
 
     # 封装成data字典, 传入模板
     data = {
