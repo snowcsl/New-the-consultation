@@ -216,6 +216,15 @@ def get_news_detail(news_id):
         current_app.logger.error(e)
         return jsonify(errno=RET.DBERR, errmsg="数据库错误")
 
+    # 六. 关注的处理
+    is_followed = False
+
+    # 已关注: 1. 确保用户登录和新闻的作者都存在
+    if user and news.user:
+        # 2. 查看我是否在新闻作者的粉丝表中
+        if user in news.user.followers:
+            is_followed = True
+
     comment_list =[]
     for comment in comment_models:
         comment_list.append(comment.to_dict())
@@ -228,6 +237,7 @@ def get_news_detail(news_id):
         'click_news_list': click_news_list,
         'news': news.to_dict(),
         'is_collected': is_collected,
-        'comment_list': comment_list
+        'comment_list': comment_list,
+        'is_followed': is_followed
     }
     return render_template('news/detail.html', data=data)
