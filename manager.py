@@ -12,7 +12,7 @@ Migrate(app, db)
 
 manager.add_command('db', MigrateCommand)
 
-
+# zhubo
 # python manager.py createsuperuser -n admin -p 123456
 @manager.option('-n', '-name', dest='name')
 @manager.option('-p', '-password', dest='password')
